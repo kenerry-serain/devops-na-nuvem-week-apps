@@ -54,3 +54,48 @@ jobs:
             git add kustomization.yml
             git commit -m "[GitHub Actions] Updating backend image tag to $REGISTRY/$BACKEND_ECR_REPOSITORY:$IMAGE_TAG"
             git push
+            
+  frontend_job:
+    runs-on: ubuntu-latest
+    name: DevOps na Nuvem Frontend Job
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN}}
+          aws-region: ${{ vars.AWS_REGION}}
+
+      - id: login-ecr
+        name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push docker image to Amazon ECR
+        env:
+            REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+            docker build \
+                -f frontend/youtube-live-app/Dockerfile \
+                -t $REGISTRY/$FRONTEND_ECR_REPOSITORY:$IMAGE_TAG \
+                frontend/youtube-live-app
+            docker push $REGISTRY/$FRONTEND_ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Checking out GitOps Repository
+        uses: actions/checkout@v4
+        with:
+            repository: kenerry-serain/devops-na-nuvem-week-gitops
+            token: ${{ secrets.PAT }}
+
+      - name: Updating GitOps Repository
+        env:
+            REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+            git config user.name github-actions
+            git config user.email github-actions@github.com
+            kustomize edit set image $REGISTRY/$FRONTEND_ECR_REPOSITORY=$REGISTRY/$FRONTEND_ECR_REPOSITORY:$IMAGE_TAG
+            git add kustomization.yml
+            git commit -m "[GitHub Actions] Updating backend image tag to $REGISTRY/$FRONTEND_ECR_REPOSITORY:$IMAGE_TAG"
+            git push
