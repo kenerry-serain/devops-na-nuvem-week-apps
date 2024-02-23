@@ -54,7 +54,7 @@ jobs:
             git add kustomization.yml
             git commit -m "[GitHub Actions] Updating backend image tag to $REGISTRY/$BACKEND_ECR_REPOSITORY:$IMAGE_TAG"
             git push
-            
+
   frontend_job:
     runs-on: ubuntu-latest
     name: DevOps na Nuvem Frontend Job
@@ -97,5 +97,5 @@ jobs:
             git config user.email github-actions@github.com
             kustomize edit set image $REGISTRY/$FRONTEND_ECR_REPOSITORY=$REGISTRY/$FRONTEND_ECR_REPOSITORY:$IMAGE_TAG
             git add kustomization.yml
-            git commit -m "[GitHub Actions] Updating backend image tag to $REGISTRY/$FRONTEND_ECR_REPOSITORY:$IMAGE_TAG"
+            git commit -m "[GitHub Actions] Updating frontend image tag to $REGISTRY/$FRONTEND_ECR_REPOSITORY:$IMAGE_TAG"
             git push
